@@ -17,7 +17,7 @@ def main():
         total_spent = data.get("total_spent", 0.0)
         last_updated = data.get("last_updated", 0)
         
-        print(f"[*] Total Protected Spend Accumulated : \")
+        print(f"[*] Total Protected Spend Accumulated : ")
         print(f"[*] Firewall Status                  : ACTIVE & ARMED")
         print(f"[*] Ledger Storage Path              : {os.path.abspath(ledger_file)}")
         print("--------------------------------------------------------")
