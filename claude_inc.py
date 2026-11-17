@@ -3,6 +3,7 @@ claude_inc.py
 -------------
 A local pre-execution AI agent spend firewall and token ledger.
 Stops runaway LLM loops and budget overruns locally before hitting upstream servers.
+Includes both zero-touch decorators and native SDK monkey-patching.
 """
 
 import os
@@ -25,6 +26,7 @@ class AgentFirewall:
         self.call_timestamps = []
         self.ledger_file = "claude_inc_ledger.json"
         self._load_ledger()
+        self._is_patched = False
 
     def _load_ledger(self) -> None:
         """Loads accumulated spend history from local persistent storage."""
@@ -52,7 +54,6 @@ class AgentFirewall:
             PermissionError: If total budget allocation has been exhausted.
         """
         now = time.time()
-        # Filter timestamps to keep only the sliding 60-second window
         self.call_timestamps = [t for t in self.call_timestamps if now - t < 60]
         
         if len(self.call_timestamps) >= self.max_calls_per_minute:
@@ -75,10 +76,7 @@ class AgentFirewall:
         self._save_ledger()
 
     def guard(self, estimated_cost: float = 0.01) -> Callable:
-        """
-        Zero-touch decorator for automatic function interception, 
-        transient retry backoff, and financial safety guarding.
-        """
+        """Zero-touch decorator for individual functions."""
         def decorator(func: Callable) -> Callable:
             @functools.wraps(func)
             def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -100,10 +98,44 @@ class AgentFirewall:
                         print(f"[CLAUDE_INC WARNING] Transient glitch. Retrying in {backoff}s (Attempt {retries}/{self.max_retries})...")
                         time.sleep(backoff)
                     except (PermissionError, RuntimeError) as firewall_err:
-                        # Hard financial or loop blocks propagate immediately without retry
                         raise firewall_err
             return wrapper
         return decorator
 
-# Global default instance for easy zero-touch imports
-default_firewall = AgentFirewall()
+    def patch_openai(self, estimated_cost: float = 0.01) -> None:
+        """
+        Silently monkey-patches OpenAI SDK client chat completions 
+        so every LLM call passes through the firewall automatically without decorators.
+        """
+        if self._is_patched:
+            return
+
+        try:
+            import openai
+            from openai.resources.chat.completions import Completions
+            
+            original_create = Completions.create
+
+            @functools.wraps(original_create)
+            def intercepted_create(self_client, *args, **kwargs):
+                # Run pre-flight check before hitting OpenAI servers
+                firewall_instance.pre_flight_check(estimated_cost)
+                
+                # Execute original API call
+                response = original_create(self_client, *args, **kwargs)
+                
+                # Log successful spend
+                firewall_instance.log_spend(estimated_cost)
+                return response
+
+            Completions.create = intercepted_create
+            self._is_patched = True
+            print("[CLAUDE_INC] OpenAI SDK successfully monkey-patched with native firewall interception.")
+        except ImportError:
+            print("[CLAUDE_INC NOTICE] OpenAI package not installed in environment. Native patch skipped.")
+        except Exception as e:
+            print(f"[CLAUDE_INC ERROR] Failed to patch OpenAI SDK: {e}")
+
+# Global default instance for easy zero-touch imports and patching
+firewall_instance = AgentFirewall()
+patch_openai = firewall_instance.patch_openai
