@@ -1,0 +1,16 @@
+
+# private working files
+.env
+*.db
+*ledger*.json
+RAW_NETWORK_INTEL.txt
+network_intel.json
+company_brain.md
+claims_to_verify*.md
+final_report*.md
+RULEBOOK.md
+AGENTS.md
+CONVERSATION_DIGEST.md
+ANTIGRAVITY_PROMPT.md
+deep_net_radar.py
+*.zip
