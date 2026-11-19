@@ -1,7 +1,7 @@
 # agentfuse
 
 Pre-call spend limits, loop breakers, and a deterministic numeric check for LLM agent code.
-Alpha (0.2.0). Python 3.9+, no dependencies. Every claim below is covered by a test in `tests/`.
+Alpha (0.2.0). Python 3.9+, no dependencies. Every claim below is covered by a test in `tests/`. The tests use provider-shaped fake responses. The library has not yet been validated against live provider APIs, so please report any mismatch.
 
 ## What it does
 
