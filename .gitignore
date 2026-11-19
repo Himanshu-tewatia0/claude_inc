@@ -1,7 +1,16 @@
-
-# private working files
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+.venv/
 .env
 *.db
+*.db-wal
+*.db-shm
+*_audit.jsonl
+
+# private working files
 *ledger*.json
 RAW_NETWORK_INTEL.txt
 network_intel.json

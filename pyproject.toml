@@ -1,19 +1,28 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "agentfuse"
 version = "0.2.0"
-description = "Local pre-execution AI agent spend firewall and atomic token ledger"
+description = "Pre-call spend limits, loop breakers and a deterministic numeric check for LLM agent code"
 readme = "README.md"
-requires-python = ">=3.8"
-authors = [
-    { name = "Himanshu Tewatia", email = "himanshutewatia771@gmail.com" }
-]
+requires-python = ">=3.9"
 license = { text = "MIT" }
 classifiers = [
+    "Development Status :: 3 - Alpha",
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+dependencies = []
+
+[project.optional-dependencies]
+anthropic = ["anthropic"]
+openai = ["openai"]
+
+[project.scripts]
+agentfuse = "agentfuse.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["agentfuse*"]
